@@ -76,14 +76,15 @@ export type Handle = RotateHandle | ScaleHandle | SkewHandle;
  * @ignore
  */
 export const HANDLE_TO_CURSOR: { [H in Handle]?: string } = {
-    topLeft: 'nw-resize',
-    topCenter: 'n-resize',
-    topRight: 'ne-resize',
-    middleLeft: 'w-resize',
-    middleRight: 'e-resize',
-    bottomLeft: 'sw-resize',
-    bottomCenter: 's-resize',
-    bottomRight: 'se-resize',
+    topLeft: 'move',
+    topCenter: 'move',
+    topRight: 'move',
+    middleLeft: 'move',
+    middleRight: 'move',
+    bottomLeft: 'move',
+    bottomCenter: 'move',
+    bottomRight: 'move',
+    rotator: 'default',
 };
 
 /**
@@ -355,7 +356,7 @@ export class Transformer extends Container
     /** Cursors to use in the transformer */
     public cursors: ITransformerCursors;
 
-    /**
+  /**
      * Flags whether the transformer should **not** redraw each frame (good for performance)
      *
      * @default false
@@ -569,6 +570,7 @@ export class Transformer extends Container
                         this.rotateGroup('rotator', pointerPosition);
                     },
                     this.commitGroup,
+                  'pointer'
                 ),
             ),
         };
@@ -922,9 +924,14 @@ export class Transformer extends Container
         const dv = (dx * vxvec) + (dy * vyvec);
 
         // Scaling factors along x,y axes
-        const sx = 1 + (du * xDir / innerBounds.width);
-        const sy = 1 + (dv * yDir / innerBounds.height);
+        let sx = 1 + (du * xDir / innerBounds.width);
+        let sy = 1 + (dv * yDir / innerBounds.height);
 
+        if (Math.abs(sx) > Math.abs(sy)) {
+          sy = sx
+        } else {
+          sx = sy
+        }
         const matrix = tempMatrix.identity();
 
         // NOTE: Do not apply scaling when sx,sy = 0 to prevent matrices from being degenerate.
